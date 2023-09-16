@@ -1,0 +1,9 @@
+<tr class="{{key}}-{{transaction[0]}} fade-me-out">
+    <td>{{transaction[1]}}</td>
+    <td>{{transaction[2]}}</td>
+    <td class="remove_cell_button">
+        <button hx-delete="/deleteTransaction/{{key}}/{{transaction[0]}}" hx-target=".{{key}}-{{transaction[0]}}">
+            -
+        </button>
+    </td>
+</tr>

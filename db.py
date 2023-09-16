@@ -1,4 +1,5 @@
 import sqlite3
+from typing import Union
 from sqlite3 import Error
 
 DB_FILENAME = "db/finance.db"
@@ -10,6 +11,16 @@ def get_bucket(key: str):
     bucket = cur.fetchall()
     con.close()
     return bucket
+
+
+def get_all_buckets():
+    query = f"SELECT name FROM sqlite_master WHERE type='table';"
+    con, cur = execute(query)
+    buckets = {}
+    for row in cur.fetchall():
+        buckets[row[0]] = get_bucket(row[0])
+    con.close()
+    return buckets
 
 
 def add_transaction(bucket: str, name: str, amount: float):
@@ -33,6 +44,21 @@ def get_transaction_by_id(bucket: str, transaction_id: int):
     transaction = cur.fetchall()[0]
     con.close()
     return transaction
+
+
+def edit_transaction(
+    bucket: str, transaction_id: int, column: str, value: Union[str, float, int]
+):
+    query = f"UPDATE {bucket} SET {column} = ? WHERE id = ?"
+    con, cur = execute(
+        query,
+        (
+            value,
+            transaction_id,
+        ),
+    )
+    con.commit()
+    cur.close()
 
 
 def delete_transaction(bucket: str, transaction_id: int):
@@ -59,5 +85,3 @@ def execute(query: str, values=None):
     else:
         cur.execute(query)
     return con, cur
-
-

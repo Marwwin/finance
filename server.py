@@ -1,6 +1,7 @@
-from typing import Annotated
+from typing import Annotated, Union
 
 from fastapi import FastAPI, Form, Request
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -30,17 +31,17 @@ def income(request: Request):
     )
 
 
-@app.get("/bucket/{key}", response_class=HTMLResponse)
-def bucket(request: Request, key: str):
-    bucket = db.get_bucket(key)
+@app.get("/bucket/{bucket}", response_class=HTMLResponse)
+def bucket(request: Request, bucket: str):
+    bucket = db.get_bucket(bucket)
     return templates.TemplateResponse(
-        "bucket.html", {"request": request, "key": key, "bucket": bucket}
+        "bucket.html", {"request": request, "key": bucket, "bucket": bucket}
     )
 
 
-@app.get("/sum/{key}", response_class=HTMLResponse)
-def get_sum(request: Request, key: str):
-    bucket = db.get_bucket(key)
+@app.get("/sum/{bucket_key}", response_class=HTMLResponse)
+def get_sum(request: Request, bucket_key: str):
+    bucket = db.get_bucket(bucket_key)
     bucket_sum = str(sum([row[2] for row in bucket]))
     return HTMLResponse(content=f"Sum: {bucket_sum}")
 
@@ -48,7 +49,9 @@ def get_sum(request: Request, key: str):
 @app.delete("/deleteTransaction/{bucket}/{transactionId}", response_class=HTMLResponse)
 def add_transaction_form(request: Request, bucket: str, transactionId: int):
     db.delete_transaction(bucket, transactionId)
-    return HTMLResponse(content="", status_code=200, headers={"HX-Trigger": f"{bucket}-reload-sum"})
+    return HTMLResponse(
+        content="", status_code=200, headers={"HX-Trigger": f"{bucket}-reload-sum"}
+    )
 
 
 @app.post("/addTransaction/{bucket}", response_class=HTMLResponse)
@@ -64,3 +67,50 @@ def add_transaction(
         {"request": request, "key": bucket, "transaction": transaction},
         headers={"HX-Trigger": f"{bucket}-reload-sum"},
     )
+
+
+@app.get("/edit/{bucket}/{transaction_id}")
+def get_edit_form(
+    request: Request, bucket: str, transaction_id: int, value: Union[str, int], name: str
+):
+    return templates.TemplateResponse(
+        "editInput.html",
+        {
+            "request": request,
+            "name": name,
+            "key": bucket,
+            "value": value,
+            "transaction_id": transaction_id,
+        },
+    )
+
+
+@app.post("/edit/{bucket}/{transaction_id}")
+async def edit_transaction(request: Request, bucket: str, transaction_id: int):
+    form = await request.form()
+    data = jsonable_encoder(form)
+
+    column = list(data.keys())[0]
+    db.edit_transaction(bucket, transaction_id, column, data[column])
+
+    transaction = db.get_transaction_by_id(bucket, transaction_id)
+    return templates.TemplateResponse(
+        "transaction.html",
+        {
+            "request": request,
+            "key": bucket,
+            "transaction": transaction,
+        },
+        headers={"HX-Trigger": f"{bucket}-reload-sum"},
+    )
+
+
+@app.get("/stats", response_class=HTMLResponse)
+def get_stats(request: Request):
+    buckets = db.get_all_buckets()
+    print(buckets)
+    return HTMLResponse(content=f"<h2>Statistics</h2>Difference: -666")
+
+
+def sum_of_bucket(bucket):
+    return sum([row[2] for row in bucket])

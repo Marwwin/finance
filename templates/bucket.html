@@ -1,68 +1,76 @@
 <div id="{{key}}" class="bucket">
-    <h2>{{key | capitalize | replace("_", " ")}}</h2>
-    <h3 hx-trigger="load, {{key}}-reload-sum from:body, click[enterKey] from:#{{key}} button"
-        hx-get="/sum/{{key}}"></h3>
-    <table id="{{key}}-transactions">
-        <tr>
-            <th>Name</th>
-            <th>Amount</th>
-        </tr>
+  <h2>{{key | capitalize | replace("_", " ")}}</h2>
+  <h3
+    hx-trigger="load, {{key}}-reload-sum from:body, click[enterKey] from:#{{key}} button"
+    hx-get="/sum/{{key}}"
+  ></h3>
+  <table id="{{key}}-transactions">
+    <tr>
+      <th>Name</th>
+      <th>Amount</th>
+    </tr>
 
-        {% for transaction in bucket %}
-             {% include "transaction.html"  %}
-        {% endfor %}
+    {% for transaction in bucket %} 
+        {% include "transaction.html" %} 
+    {% endfor %}
 
-        <tr class="button-row">
-            <form hx-post="/addTransaction/{{key}}" hx-swap="beforebegin" hx-target="closest tr">
-                <td><input type="text" name="name" placeholder="Name" /></td>
-                <td><input type="number" name="amount" placeholder="Amount" /></td>
-                <td><button id="{{key}}-add_transaction_button" type="submit">+</button></td>
-            </form>
-        </tr>
-    </table>
+    <tr class="button-row">
+      <form
+        hx-post="/addTransaction/{{key}}"
+        hx-swap="beforebegin"
+        hx-target="closest tr"
+      >
+        <td><input type="text" name="name" placeholder="Name" /></td>
+        <td><input type="number" name="amount" placeholder="Amount" /></td>
+        <td>
+          <button id="{{key}}-add_transaction_button" type="submit">+</button>
+        </td>
+      </form>
+    </tr>
+  </table>
 </div>
 
 <style>
-    .bucket {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        margin: 0em 1em;
-        background-color: red;
-        padding: 1em;
-        border-radius: 10px;
+  .bucket {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: 0em 1em;
+    background-color: red;
+    padding: 0em 1em 1em 1em;
+    border-radius: 10px;
 
-        /* Chrome, Safari, Edge, Opera */
-        input::-webkit-outer-spin-button,
-        input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-
-        /* Firefox */
-        input[type="number"] {
-            -moz-appearance: textfield;
-        }
-
-        input {
-            width: 5em;
-            border-radius: 10px;
-            border: none;
-            text-align: center;
-        }
-
-        .remove_cell_button {
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        tr:hover .remove_cell_button {
-            opacity: 1;
-        }
+    /* Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
     }
 
-    #income {
-        background-color: green;
+    /* Firefox */
+    input[type="number"] {
+      -moz-appearance: textfield;
     }
+
+    input {
+      width: 5em;
+      border-radius: 10px;
+      border: none;
+      text-align: center;
+    }
+
+    .remove_cell_button {
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    tr:hover .remove_cell_button {
+      opacity: 1;
+    }
+  }
+
+  #income {
+    background-color: green;
+  }
 </style>

@@ -1,12 +1,12 @@
 import sqlite3
-from typing import Union
 from sqlite3 import Error
+from typing import Union
 
 DB_FILENAME = "db/finance.db"
 
 
-def get_bucket(key: str):
-    query = f"SELECT * FROM {key}"
+def get_bucket(table: str):
+    query = f"SELECT * FROM {table}"
     con, cur = execute(query)
     bucket = cur.fetchall()
     con.close()
@@ -14,7 +14,7 @@ def get_bucket(key: str):
 
 
 def get_all_buckets():
-    query = f"SELECT name FROM sqlite_master WHERE type='table';"
+    query = "SELECT name FROM sqlite_master WHERE type='table'"
     con, cur = execute(query)
     buckets = {}
     for row in cur.fetchall():
@@ -23,8 +23,8 @@ def get_all_buckets():
     return buckets
 
 
-def add_transaction(bucket: str, name: str, amount: float):
-    query = f"INSERT INTO {bucket} (name, amount) VALUES (?, ?);"
+def add_transaction(table: str, name: str, amount: float):
+    query = f"INSERT INTO {table} (name, amount) VALUES (?, ?);"
     con, cur = execute(
         query,
         (
@@ -35,11 +35,11 @@ def add_transaction(bucket: str, name: str, amount: float):
     con.commit()
     transaction_id = cur.lastrowid
     con.close()
-    return get_transaction_by_id(bucket, transaction_id)
+    return get_transaction_by_id(table, transaction_id)
 
 
-def get_transaction_by_id(bucket: str, transaction_id: int):
-    query = f"SELECT * FROM {bucket} where id=?"
+def get_transaction_by_id(table: str, transaction_id: int):
+    query = f"SELECT * FROM {table} where id=?"
     con, cur = execute(query, (transaction_id,))
     transaction = cur.fetchall()[0]
     con.close()
@@ -47,9 +47,9 @@ def get_transaction_by_id(bucket: str, transaction_id: int):
 
 
 def edit_transaction(
-    bucket: str, transaction_id: int, column: str, value: Union[str, float, int]
+    table: str, column: str, transaction_id: int, value: Union[str, float, int]
 ):
-    query = f"UPDATE {bucket} SET {column} = ? WHERE id = ?"
+    query = f"UPDATE {table} SET {column} = ? WHERE id = ?"
     con, cur = execute(
         query,
         (
@@ -61,8 +61,8 @@ def edit_transaction(
     cur.close()
 
 
-def delete_transaction(bucket: str, transaction_id: int):
-    query = f"DELETE FROM {bucket} WHERE id=?"
+def delete_transaction(table: str, transaction_id: int):
+    query = f"DELETE FROM {table} WHERE id=?"
     con, cur = execute(query, (transaction_id,))
     con.commit()
     con.close()

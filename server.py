@@ -31,11 +31,11 @@ def income(request: Request):
     )
 
 
-@app.get("/bucket/{bucket}", response_class=HTMLResponse)
-def bucket(request: Request, bucket: str):
-    bucket = db.get_bucket(bucket)
+@app.get("/bucket/{bucket_key}", response_class=HTMLResponse)
+def bucket(request: Request, bucket_key: str):
+    bucket = db.get_bucket(bucket_key)
     return templates.TemplateResponse(
-        "bucket.html", {"request": request, "key": bucket, "bucket": bucket}
+        "bucket.html", {"request": request, "key": bucket_key, "bucket": bucket}
     )
 
 
@@ -71,7 +71,11 @@ def add_transaction(
 
 @app.get("/edit/{bucket}/{transaction_id}")
 def get_edit_form(
-    request: Request, bucket: str, transaction_id: int, value: Union[str, int], name: str
+    request: Request,
+    bucket: str,
+    transaction_id: int,
+    value: Union[str, int],
+    name: str,
 ):
     return templates.TemplateResponse(
         "editInput.html",
@@ -91,7 +95,7 @@ async def edit_transaction(request: Request, bucket: str, transaction_id: int):
     data = jsonable_encoder(form)
 
     column = list(data.keys())[0]
-    db.edit_transaction(bucket, transaction_id, column, data[column])
+    db.edit_transaction(bucket, column, transaction_id, data[column])
 
     transaction = db.get_transaction_by_id(bucket, transaction_id)
     return templates.TemplateResponse(

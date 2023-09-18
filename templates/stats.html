@@ -1,0 +1,8 @@
+<div hx-get="/stats" hx-trigger="reload-stats from:body" hx-swap="outerHTML">
+  <h2>Statistics</h2>
+  <div class="stats_data">
+    <div>In: {{income}}</div>
+    <div>Out: {{out}}</div>
+    <div>Difference: {{"%.2f"|format(income-out)}}€</div>
+  </div>
+</div>

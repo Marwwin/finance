@@ -1,6 +1,6 @@
 import sqlite3
 from sqlite3 import Error
-from typing import Union
+from typing import Tuple, Union
 
 DB_FILENAME = "db/finance.db"
 
@@ -47,8 +47,9 @@ def get_transaction_by_id(table: str, transaction_id: int):
 
 
 def edit_transaction(
-    table: str, column: str, transaction_id: int, value: Union[str, float, int]
+    table: str, transaction_id: int, edit: Tuple[str, Union[str, float, int]]
 ):
+    column, value = edit
     query = f"UPDATE {table} SET {column} = ? WHERE id = ?"
     con, cur = execute(
         query,
@@ -58,7 +59,7 @@ def edit_transaction(
         ),
     )
     con.commit()
-    cur.close()
+    con.close()
 
 
 def delete_transaction(table: str, transaction_id: int):

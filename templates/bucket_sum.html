@@ -1,0 +1,10 @@
+<div
+  class="bucket_sum"
+  hx-trigger="load, reload-sum from:body"
+  hx-get="/sum/{{bucket}}"
+>
+  Sum: {bucket}
+</div>
+{% if bucket_key == "income" %}
+<div>Percentage: {bucket/income_bucket*100:.2f}%</div>
+{% endif %}

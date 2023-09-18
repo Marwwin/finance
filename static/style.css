@@ -1,0 +1,77 @@
+#buckets {
+  #outgoing {
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+  }
+  .bucket {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: 0em 1em;
+    background-color: red;
+    padding: 0em 1em 1em 1em;
+    border-radius: 10px;
+    border: 2px solid;
+    text-align: center
+
+    /* Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    /* Firefox */
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+
+    input {
+      width: 5em;
+      border-radius: 10px;
+      border: none;
+      text-align: center;
+    }
+
+    .remove_cell_button {
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    tr:hover .remove_cell_button {
+      opacity: 1;
+    }
+  }
+
+  #income-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 5em;
+
+    #income {
+      background-color: green;
+    }
+  }
+}
+#stats {
+  padding: 0em 2em 3em 2em;
+  background-color: cornflowerblue;
+  display: inline;
+  position: absolute;
+  right: 1em;
+  top: 1em;
+  border-radius: 10px;
+  border: 2px solid;
+  .stats_data {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.fade-me-out.htmx-swapping {
+  opacity: 0;
+  transition: opacity 1s ease-out;
+}

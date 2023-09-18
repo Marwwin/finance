@@ -1,3 +1,4 @@
+import json
 from typing import Annotated, Union
 
 from fastapi import FastAPI, Form, Request
@@ -23,34 +24,24 @@ def root(request: Request):
     )
 
 
-@app.get("/income", response_class=HTMLResponse)
-def income(request: Request):
-    bucket = db.get_bucket("income")
-    return templates.TemplateResponse(
-        "bucket.html", {"request": request, "key": "income", "bucket": bucket}
-    )
-
-
 @app.get("/bucket/{bucket_key}", response_class=HTMLResponse)
 def bucket(request: Request, bucket_key: str):
     bucket = db.get_bucket(bucket_key)
     return templates.TemplateResponse(
-        "bucket.html", {"request": request, "key": bucket_key, "bucket": bucket}
+        "bucket.html",
+        {"request": request, "bucket": bucket_key, "transactions": bucket},
     )
-
-
-@app.get("/sum/{bucket_key}", response_class=HTMLResponse)
-def get_sum(request: Request, bucket_key: str):
-    bucket = db.get_bucket(bucket_key)
-    bucket_sum = str(sum([row[2] for row in bucket]))
-    return HTMLResponse(content=f"Sum: {bucket_sum}")
 
 
 @app.delete("/deleteTransaction/{bucket}/{transactionId}", response_class=HTMLResponse)
 def add_transaction_form(request: Request, bucket: str, transactionId: int):
     db.delete_transaction(bucket, transactionId)
     return HTMLResponse(
-        content="", status_code=200, headers={"HX-Trigger": f"{bucket}-reload-sum"}
+        content="",
+        status_code=200,
+        headers={
+            "HX-Trigger": json.dumps({"reload-sum": "", "reload-stats": ""})
+        },
     )
 
 
@@ -59,13 +50,15 @@ def add_transaction(
     request: Request,
     bucket: str,
     name: Annotated[str, Form()],
-    amount: Annotated[int, Form()],
+    amount: Annotated[float, Form()],
 ):
     transaction = db.add_transaction(bucket, name, amount)
     return templates.TemplateResponse(
         "transaction.html",
-        {"request": request, "key": bucket, "transaction": transaction},
-        headers={"HX-Trigger": f"{bucket}-reload-sum"},
+        {"request": request, "bucket": bucket, "transaction": transaction},
+        headers={
+            "HX-Trigger": json.dumps({"reload-sum": "", "reload-stats": ""})
+        },
     )
 
 
@@ -81,8 +74,8 @@ def get_edit_form(
         "editInput.html",
         {
             "request": request,
-            "name": name,
-            "key": bucket,
+            "bucket": bucket,
+            "field_name": name,
             "value": value,
             "transaction_id": transaction_id,
         },
@@ -94,26 +87,53 @@ async def edit_transaction(request: Request, bucket: str, transaction_id: int):
     form = await request.form()
     data = jsonable_encoder(form)
 
-    column = list(data.keys())[0]
-    db.edit_transaction(bucket, column, transaction_id, data[column])
+    edit = list(data.items())[0]
+    db.edit_transaction(bucket, transaction_id, edit)
 
     transaction = db.get_transaction_by_id(bucket, transaction_id)
     return templates.TemplateResponse(
         "transaction.html",
         {
             "request": request,
-            "key": bucket,
+            "bucket": bucket,
             "transaction": transaction,
         },
-        headers={"HX-Trigger": f"{bucket}-reload-sum"},
+        headers={
+            "HX-Trigger": json.dumps({"reload-sum": "", "reload-stats": ""})
+        },
+    )
+
+
+@app.get("/sum/{bucket_key}", response_class=HTMLResponse)
+def get_sum(request: Request, bucket_key: str):
+    bucket = sum_of_bucket(db.get_bucket(bucket_key))
+    if bucket_key == "income":
+        return HTMLResponse(
+            content=f"""
+            <div class='bucket_sum'>Sum: {bucket}</div>""",
+        )
+
+    income_bucket = sum_of_bucket(db.get_bucket("income"))
+    return HTMLResponse(
+        content=f"""
+            <div class='bucket_sum'>Sum: {bucket}</div>
+            <div>Percentage: {bucket/income_bucket*100:.2f}%</div>""",
     )
 
 
 @app.get("/stats", response_class=HTMLResponse)
 def get_stats(request: Request):
     buckets = db.get_all_buckets()
-    print(buckets)
-    return HTMLResponse(content=f"<h2>Statistics</h2>Difference: -666")
+    income_bucket = sum_of_bucket(buckets["income"])
+    total = 0
+    for key in buckets.keys():
+        if not key == "income":
+            total += sum_of_bucket(buckets[key])
+
+    return templates.TemplateResponse(
+        "stats.html",
+        {"request": request, "income": income_bucket, "out": total},
+    )
 
 
 def sum_of_bucket(bucket):

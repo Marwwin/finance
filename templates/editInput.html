@@ -1,10 +1,11 @@
 <form
-    id="edit_form"
+  id="edit_form"
   hx-on::load="this.children[0].focus()"
-  hx-post="/edit/{{bucket}}/{{transaction_id}}"
+  hx-put="/transactions/{{bucket}}/{{transaction_id}}"
   hx-trigger="focusout, submit"
   hx-swap="outerHTML"
   hx-target="closest tr"
+  hx-include="[name='{{field_name}}']"
 >
   <input name="{{field_name}}" value="{{value}}" />
 </form>

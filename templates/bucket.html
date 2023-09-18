@@ -17,14 +17,14 @@
 
     <tr class="button-row">
       <form
-        hx-post="/addTransaction/{{bucket}}"
+        hx-post="/transactions/{{bucket}}"
         hx-swap="beforebegin"
         hx-target="closest tr"
       >
         <td><input type="text" name="name" placeholder="Name" /></td>
         <td><input type="number" name="amount" step="0.01" placeholder="Amount" /></td>
         <td>
-          <button id="{{bucket}}-add_transaction_button" type="submit">
+          <button  type="submit">
             +
           </button>
         </td>

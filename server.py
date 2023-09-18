@@ -1,7 +1,6 @@
-import json
 from typing import Annotated, Union
 
-from fastapi import FastAPI, Form, Request
+from fastapi import APIRouter, FastAPI, Form, HTTPException, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -33,19 +32,20 @@ def bucket(request: Request, bucket_key: str):
     )
 
 
-@app.delete("/deleteTransaction/{bucket}/{transactionId}", response_class=HTMLResponse)
-def add_transaction_form(request: Request, bucket: str, transactionId: int):
-    db.delete_transaction(bucket, transactionId)
+transactions = APIRouter()
+
+
+@transactions.delete("/{bucket_key}/{transaction_id}", response_class=HTMLResponse)
+def add_transaction_form(request: Request, bucket_key: str, transaction_id: int):
+    db.delete_transaction(bucket_key, transaction_id)
     return HTMLResponse(
         content="",
         status_code=200,
-        headers={
-            "HX-Trigger": json.dumps({"reload-sum": "", "reload-stats": ""})
-        },
+        headers={"HX-Trigger": "reload-stats"},
     )
 
 
-@app.post("/addTransaction/{bucket}", response_class=HTMLResponse)
+@transactions.post("/{bucket}", response_class=HTMLResponse)
 def add_transaction(
     request: Request,
     bucket: str,
@@ -56,37 +56,15 @@ def add_transaction(
     return templates.TemplateResponse(
         "transaction.html",
         {"request": request, "bucket": bucket, "transaction": transaction},
-        headers={
-            "HX-Trigger": json.dumps({"reload-sum": "", "reload-stats": ""})
-        },
+        headers={"HX-Trigger": "reload-stats"},
     )
 
 
-@app.get("/edit/{bucket}/{transaction_id}")
-def get_edit_form(
-    request: Request,
-    bucket: str,
-    transaction_id: int,
-    value: Union[str, int],
-    name: str,
-):
-    return templates.TemplateResponse(
-        "editInput.html",
-        {
-            "request": request,
-            "bucket": bucket,
-            "field_name": name,
-            "value": value,
-            "transaction_id": transaction_id,
-        },
-    )
-
-
-@app.post("/edit/{bucket}/{transaction_id}")
+@transactions.put("/{bucket}/{transaction_id}")
 async def edit_transaction(request: Request, bucket: str, transaction_id: int):
     form = await request.form()
     data = jsonable_encoder(form)
-
+    print(data)
     edit = list(data.items())[0]
     db.edit_transaction(bucket, transaction_id, edit)
 
@@ -98,26 +76,46 @@ async def edit_transaction(request: Request, bucket: str, transaction_id: int):
             "bucket": bucket,
             "transaction": transaction,
         },
-        headers={
-            "HX-Trigger": json.dumps({"reload-sum": "", "reload-stats": ""})
+        headers={"HX-Trigger": "reload-stats"},
+    )
+
+
+@transactions.patch("/{bucket}/{transaction_id}")
+async def get_edit_form(
+    request: Request,
+    bucket: str,
+    transaction_id: int,
+    # value: Union[str, int],
+    # name: str,
+):
+    form = await request.form()
+    data = jsonable_encoder(form)
+
+    print(data)
+    return templates.TemplateResponse(
+        "editInput.html",
+        {
+            "request": request,
+            "bucket": bucket,
+            #        "field_name": name,
+            #        "value": value,
+            "transaction_id": transaction_id,
         },
     )
 
 
 @app.get("/sum/{bucket_key}", response_class=HTMLResponse)
 def get_sum(request: Request, bucket_key: str):
-    bucket = sum_of_bucket(db.get_bucket(bucket_key))
-    if bucket_key == "income":
-        return HTMLResponse(
-            content=f"""
-            <div class='bucket_sum'>Sum: {bucket}</div>""",
-        )
-
+    bucket_sum = sum_of_bucket(db.get_bucket(bucket_key))
     income_bucket = sum_of_bucket(db.get_bucket("income"))
-    return HTMLResponse(
-        content=f"""
-            <div class='bucket_sum'>Sum: {bucket}</div>
-            <div>Percentage: {bucket/income_bucket*100:.2f}%</div>""",
+    return templates.TemplateResponse(
+        "bucket_sum.html",
+        {
+            "request": request,
+            "bucket_key": bucket_key,
+            "bucket_sum": bucket_sum,
+            "income_bucket": income_bucket,
+        },
     )
 
 
@@ -138,3 +136,6 @@ def get_stats(request: Request):
 
 def sum_of_bucket(bucket):
     return sum([row[2] for row in bucket])
+
+
+app.include_router(transactions, prefix="/transactions")

@@ -1,22 +1,23 @@
 <tr class="{{bucket}}-{{transaction[0]}} fade-me-out">
   <td>
     <span
-      hx-get="/edit/{{bucket}}/{{transaction[0]}}?value={{transaction[1]}}&name=name"
+      hx-patch="/transactions/{{bucket}}/{{transaction[0]}}?value={{transaction[1]}}&name=name"
       hx-swap="outerHTML"
       >{{transaction[1]}}</span
     >
   </td>
   <td>
     <span
+      hx-patch="/transactions/{{bucket}}/{{transaction[0]}}?value={{transaction[2]}}&name=amount"
       hx-swap="outerHTML"
-      hx-get="/edit/{{bucket}}/{{transaction[0]}}?value={{transaction[2]}}&name=amount"
       >{{transaction[2]}}</span
     >
   </td>
   <td class="remove_cell_button">
     <button
-      hx-delete="/deleteTransaction/{{bucket}}/{{transaction[0]}}"
+      hx-delete="/transactions/{{bucket}}/{{transaction[0]}}"
       hx-target=".{{bucket}}-{{transaction[0]}}"
+      hx-swap="outerHTML"
     >
       -
     </button>

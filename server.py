@@ -85,8 +85,8 @@ async def get_edit_form(
     request: Request,
     bucket: str,
     transaction_id: int,
-    # value: Union[str, int],
-    # name: str,
+    value: Union[str, int],
+    name: str,
 ):
     form = await request.form()
     data = jsonable_encoder(form)
@@ -97,8 +97,8 @@ async def get_edit_form(
         {
             "request": request,
             "bucket": bucket,
-            #        "field_name": name,
-            #        "value": value,
+            "field_name": name,
+            "value": value,
             "transaction_id": transaction_id,
         },
     )

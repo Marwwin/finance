@@ -1,3 +1,4 @@
+import datetime
 import sqlite3
 from sqlite3 import Error
 from typing import Tuple, Union
@@ -5,7 +6,7 @@ from typing import Tuple, Union
 DB_FILENAME = "db/finance.db"
 
 
-def get_bucket(table: str):
+def get_table(table: str):
     query = f"SELECT * FROM {table}"
     con, cur = execute(query)
     bucket = cur.fetchall()
@@ -13,12 +14,19 @@ def get_bucket(table: str):
     return bucket
 
 
+def delete_table(table:str):
+    query = f"DROP TABLE {table}"
+    con, cur = execute(query)
+    con.commit()
+    con.close()
+
+
 def get_all_buckets():
-    query = "SELECT name FROM sqlite_master WHERE type='table'"
+    query = "SELECT name FROM sqlite_master WHERE type='table' AND name != 'snapshot'"
     con, cur = execute(query)
     buckets = {}
     for row in cur.fetchall():
-        buckets[row[0]] = get_bucket(row[0])
+        buckets[row[0]] = get_table(row[0])
     con.close()
     return buckets
 
@@ -69,6 +77,43 @@ def delete_transaction(table: str, transaction_id: int):
     con.close()
 
 
+def save_snapshot():
+    con = get_con()
+    cur = con.cursor()
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS snapshot (
+                id INTEGER PRIMARY KEY,
+                snapshot_id TEXT,
+                table_name TEXT,
+                name TEXT,
+                amount REAL,
+                isPeriodic INTEGER
+                )"""
+    )
+    buckets = get_all_buckets()
+    snapshot_id = str(datetime.datetime.now())
+    for bucket in buckets.keys():
+        if bucket != "snapshot":
+            query = f"""INSERT INTO snapshot (snapshot_id, table_name, name, amount, isPeriodic)
+                    SELECT ?, ?, name, amount, isPeriodic
+                    FROM {bucket}"""
+            cur.execute(query, (snapshot_id, bucket))
+    con.commit()
+    row_id = cur.lastrowid
+    con.close()
+    return row_id
+
+
+def add_column_to_tables(name: str, column_type: str):
+    con = get_con()
+    cur = con.cursor()
+    buckets = get_all_buckets()
+    for table in buckets.keys():
+        cur.execute(f"ALTER TABLE {table} ADD COLUMN {name} {column_type}")
+    con.commit()
+    con.close()
+
+
 def get_con():
     con = None
     try:
@@ -86,3 +131,6 @@ def execute(query: str, values=None):
     else:
         cur.execute(query)
     return con, cur
+
+
+    

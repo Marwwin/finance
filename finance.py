@@ -24,7 +24,7 @@ if __name__ == "__main__":
         print("Saved snapshot", row_id)
 
     if action == "snapshot":
-        print(db.get_table("snapshot"))
+        print(db.get_bucket("snapshot"))
 
     if action == "delete_table":
         print("delete")

@@ -6,7 +6,7 @@ from typing import Tuple, Union
 DB_FILENAME = "db/finance.db"
 
 
-def get_table(table: str):
+def get_bucket(table: str):
     query = f"SELECT * FROM {table}"
     con, cur = execute(query)
     bucket = cur.fetchall()
@@ -14,7 +14,7 @@ def get_table(table: str):
     return bucket
 
 
-def delete_table(table:str):
+def delete_table(table: str):
     query = f"DROP TABLE {table}"
     con, cur = execute(query)
     con.commit()
@@ -26,7 +26,7 @@ def get_all_buckets():
     con, cur = execute(query)
     buckets = {}
     for row in cur.fetchall():
-        buckets[row[0]] = get_table(row[0])
+        buckets[row[0]] = get_bucket(row[0])
     con.close()
     return buckets
 
@@ -131,6 +131,3 @@ def execute(query: str, values=None):
     else:
         cur.execute(query)
     return con, cur
-
-
-    
